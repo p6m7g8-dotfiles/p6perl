@@ -26,23 +26,23 @@ our $VERSION = q$Revision: 47160 $;
 ## globals
 
 sub dread {
-    my $f = shift;
+    my $f    = shift;
     my %args = @_;
 
     my @lines;
-    if (open my $fh, '<', $f) {
-      @lines = <$fh>;
-      close $fh or die "Can't close [$f] b/c [$!]";
+    if ( open my $fh, '<', $f ) {
+        @lines = <$fh>;
+        close $fh or die "Can't close [$f] b/c [$!]";
     }
     else {
-      die "Can't open [$f] b/c [$!]" unless $args{nofail};
+        die "Can't open [$f] b/c [$!]" unless $args{nofail};
     }
 
     return \@lines;
 }
 
 sub dappend {
-    my ($f, $str) = @_;
+    my ( $f, $str ) = @_;
 
     open my $fh, '>>', $f or die "Can't open [$f] b/c [$!]";
     print $fh $$str;
@@ -52,7 +52,7 @@ sub dappend {
 }
 
 sub dwrite {
-    my ($f, $str) = @_;
+    my ( $f, $str ) = @_;
 
     open my $fh, '>', $f or die "Can't open [$f] b/c [$!]";
     print $fh $$str;
@@ -62,26 +62,31 @@ sub dwrite {
 }
 
 sub scan {
-  my ($dir, $regex, %args) = @_;
+    my ( $dir, $regex, %args ) = @_;
 
-  my @files = ();
-  return \@files unless -d $dir;
-  
-  File::Find::find sub {
-    return unless /$regex/;
-    if ($args{files_only}) {
-      return if -d;
-    }
-    push @files, $File::Find::name;
-  }, $dir;
+    my @files = ();
+    return \@files unless -d $dir;
 
-  return \@files;
+    File::Find::find sub {
+        if ($regex) {
+            return unless /$regex/;
+        }
+        if ( $args{files_only} ) {
+            return if -d;
+        }
+        if ( $args{dirs_only} ) {
+            return if !-d;
+        }
+        push @files, $File::Find::name;
+    }, $dir;
+
+    return \@files;
 }
 
 sub copy {
-    my ($f, $t) = @_;
+    my ( $f, $t ) = @_;
 
-    File::Copy::copy($f, $t) or die "$f -> $t failed b/c [$!]\n";
+    File::Copy::copy( $f, $t ) or die "$f -> $t failed b/c [$!]\n";
 
     return;
 }

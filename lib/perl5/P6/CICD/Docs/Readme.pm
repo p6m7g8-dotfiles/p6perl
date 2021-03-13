@@ -5,7 +5,6 @@ use parent 'P6::Object';
 use strict;
 use warnings FATAL => 'all';
 use Carp;
-
 use File::Basename ();
 
 ## Std
@@ -45,8 +44,8 @@ sub readme_gen() {
     my $self = shift;
     my %args = @_;
 
-    my $module = $self->module();
-    $module = File::Basename::basename($module);
+    my $omodule = $self->module();
+    my $module  = File::Basename::basename($omodule);
 
     print "# $module\n\n";
 
@@ -87,71 +86,124 @@ sub readme_gen() {
 
 - [Change Log](CHANGELOG.md)
 
-### Usage
+## Usage
 
 ";
 
     my $funcs = $self->funcs();
-    foreach my $file ( sort keys %{ $self->funcs() } ) {
-        my $section = ( split /\//, $file )[-1];
 
-        print "#### $section:\n\n";
+    foreach my $dir ( sort keys %$funcs ) {
+        my $dir_funcs = $funcs->{$dir};
 
-        my @funcs = sort @{ $funcs->{$file} };
-        foreach my $func (@funcs) {
-            next if $func =~ /__/;
-            print "- $func\n";
+        foreach my $subdir ( sort keys %$dir_funcs ) {
+            my $file_funcs = $dir_funcs->{$subdir};
+
+            $subdir ||= $module;
+            print "### $subdir:\n\n";
+
+            foreach my $file ( sort keys %$file_funcs ) {
+                next if $file =~ /debug/;
+                next if $file =~ /\/_/;
+                my @funcs = sort @{ $file_funcs->{$file} };
+
+                my $pfile = $file;
+                $file =~ s/^.*?$subdir/$subdir/;
+                print "#### $file:\n\n";
+
+                foreach my $func (@funcs) {
+                    next if $func =~ /__/;
+                    print "- $func\n";
+                }
+
+                print "\n";
+            }
+
+            print "\n";
         }
+
         print "\n";
     }
 
-    print "
-## Author
+    if ( -d "$omodule/lib" ) {
+        print "## Hier\n";
+        print "```text\n";
+        system "(cd $omodule/lib ; tree)";
+        print "```\n";
+    }
+
+    print "## Author
 
 Philip M . Gollucci <pgollucci\@p6m7g8.com>
 ";
-
     return;
 }
 
-sub files() {
+sub children() {
+    my $self = shift;
+    my $dir  = shift;
+
+    my $children = P6::IO::scan( $dir, qr/\.sh$|\.zsh$/, files_only => 1 );
+
+    P6::Util::debug("DIR: $dir\n");
+    P6::Util::debug_dumper( "CHILDREN: ", $children );
+
+    $children;
+}
+
+sub dirs() {
     my $self = shift;
 
     my $module_dir = $self->module();
     my $lib_dir    = "$module_dir/lib";
+    my $dirs       = [$lib_dir];
+
+    P6::Util::debug("module_dir: $module_dir\n");
     P6::Util::debug("lib_dir: $lib_dir\n");
+    P6::Util::debug_dumper( "DIRS", $dirs );
 
-    my $files = P6::IO::scan( $lib_dir, qr/\.sh$|\.zsh$/, files_only => 1 );
-    push @$files, "$module_dir/init.zsh" if -e "$module_dir/init.zsh";
-
-    P6::Util::debug_dumper( "FILES", $files );
-
-    $files;
+    $dirs;
 }
 
 sub parse {
     my $self = shift;
 
-    my $files = $self->files();
+    my $funcs      = {};
+    my $module_dir = $self->module();
+    my $dirs       = $self->dirs();
 
-    my $funcs = {};
-    foreach my $file ( sort @$files ) {
+    if ( -e "$module_dir/init.zsh" ) {
+        my $lines = P6::IO::dread("$module_dir/init.zsh");
 
-        #    P6::Util::debug("FILE: $file\n");
-
-        my $lines = P6::IO::dread($file);
         foreach my $line (@$lines) {
-
-            #      P6::Util::debug(" LINE: $line\n");
             if ( $line =~ /# Function: (.*)/ ) {
-                push @{ $funcs->{$file} }, $1;
+                push
+                  @{ $funcs->{"$module_dir/lib"}->{""}->{"$module_dir/init.zsh"}
+                  }, $1;
+            }
+        }
+    }
+
+    foreach my $dir ( sort @$dirs ) {
+        my $children = $self->children($dir);
+
+        foreach my $file ( sort @$children ) {
+            my $lines = P6::IO::dread($file);
+
+            foreach my $line (@$lines) {
+                if ( $line =~ /# Function: (.*)/ ) {
+                    my $func   = $1;
+                    my $subdir = File::Basename::dirname $file;
+
+                    $subdir =~ s!$module_dir/lib/!!;
+                    P6::Util::debug("SUBDIR2: $subdir\n");
+
+                    push @{ $funcs->{$dir}->{$subdir}->{$file} }, $func;
+                }
             }
         }
     }
 
     $self->funcs($funcs);
-
-    # P6::Util::debug_dumper "FUNCS", $funcs;
 
     return;
 }

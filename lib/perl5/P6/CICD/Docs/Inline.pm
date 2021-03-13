@@ -105,11 +105,11 @@ sub doc_gen_returns {
         no warnings qw(uninitialized);
         next if $rv->{type} eq "void";
         $str .= "#\t$rv->{type} - $rv->{name}";
-        if ($rv->{comment}) {
-          $str .= ": $rv->{comment}\n";
+        if ( $rv->{comment} ) {
+            $str .= ": $rv->{comment}\n";
         }
         else {
-          $str .= "\n";
+            $str .= "\n";
         }
     }
     $str .= "\n" unless $str =~ /\n$/;
@@ -241,7 +241,7 @@ sub parse {
     my $self = shift;
 
     my @types = (
-        qw(array bool code false int path size_t words str true void obj hash list string scalar item aws_arn aws_account_id aws_resource_id aws_logical_id aws_cfg)
+        qw(array bool code false int path size_t words str true void obj hash list string scalar item aws_arn aws_account_id aws_resource_id aws_logical_id aws_profile_config aws_profile_cred aws_profie)
     );
     push @types, (qw(item_ref obj_ref));
     my $types_re = join '|', @types;
@@ -253,7 +253,6 @@ sub parse {
     my $funcs      = {};
     my $extra_docs = [];
     foreach my $file ( sort @$files ) {
-
         P6::Util::debug("FILE: $file\n");
         my $func    = "";
         my $in_func = 1;
@@ -332,15 +331,6 @@ sub parse {
                 $rv->{type} = $1;
 
                 P6::Util::debug("\treturn: $line");
-
-                $rv->{name} = $1 if $line =~ /\"([^\"]+)\"/;
-            }
-
-            # XXX: remove when all p6_return replaced
-            if ( $line =~ /^\s+p6_return / ) {
-                $rv->{type} = "unkown";
-
-                P6::Util::debug("\treturn_legacy: $line");
 
                 $rv->{name} = $1 if $line =~ /\"([^\"]+)\"/;
             }

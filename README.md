@@ -38,9 +38,11 @@
 
 - [Change Log](CHANGELOG.md)
 
-### Usage
+## Usage
 
-#### init.zsh:
+### p6perl:
+
+#### p6perl/init.zsh:
 
 - p6_perl_init(dir)
 - p6df::modules::p6perl::deps()
@@ -48,6 +50,48 @@
 - p6df::modules::p6perl::init()
 
 
+
+## Hier
+```text
+.
+└── perl5
+    ├── P6
+    │   ├── AWS
+    │   │   ├── EC2
+    │   │   │   └── VPC
+    │   │   │       └── SG.pm
+    │   │   ├── ELB.pm
+    │   │   ├── SGen
+    │   │   │   ├── Cmd.pm
+    │   │   │   └── Service.pm
+    │   │   └── SGen.pm
+    │   ├── CICD
+    │   │   └── Docs
+    │   │       ├── Inline.pm
+    │   │       └── Readme.pm
+    │   ├── CLI.pm
+    │   ├── Cache.pm
+    │   ├── Cmd.pm
+    │   ├── Const.pm
+    │   ├── DB.pm
+    │   ├── DT.pm
+    │   ├── Email.pm
+    │   ├── IO.pm
+    │   ├── MVC
+    │   │   ├── C
+    │   │   │   └── Router.pm
+    │   │   ├── C.pm
+    │   │   ├── M.pm
+    │   │   ├── Util
+    │   │   │   └── DB.pm
+    │   │   └── V.pm
+    │   ├── Object.pm
+    │   ├── Template.pm
+    │   └── Util.pm
+    └── P6.pm
+
+11 directories, 24 files
+```
 ## Author
 
 Philip M . Gollucci <pgollucci@p6m7g8.com>
