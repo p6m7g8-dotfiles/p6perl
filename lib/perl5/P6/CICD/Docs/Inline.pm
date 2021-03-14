@@ -199,7 +199,7 @@ sub splice_in() {
             next if $doc_in;
             next if $line =~ /^#\//;
 
-            if ( $line =~ /^smile|^p6_|^p6df/ ) {
+            if ( $line =~ /^smile_|^p6_|^p6df/ ) {
                 my $fname = $line;
                 $fname =~ s/\s+.*//g;
 
