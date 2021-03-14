@@ -216,6 +216,7 @@ sub splice_in() {
         }
 
         my $content = join "\n", @new_lines;
+        $content .= "\n";
         P6::IO::dwrite( $file, \$content );
     }
 
@@ -291,6 +292,8 @@ sub parse {
 
                 $arg->{default} = $1 if $line =~ /:-([^}]*)\}/;
                 $arg->{comment} = $1 if $line =~ /# (.*)$/;
+                delete $arg->{comment}
+                  unless $arg->{comment} && $arg->{comment} =~ /\w/;
 
                 P6::Util::debug_dumper( "arg", $arg );
                 push @{ $funcs->{$func}->{args} }, $arg;
