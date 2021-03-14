@@ -241,9 +241,9 @@ sub parse {
     my $self = shift;
 
     my @types = (
-        qw(array bool code false int path size_t words str true void obj hash list string scalar item aws_arn aws_account_id aws_resource_id aws_logical_id aws_profile_config aws_profile_cred aws_profie)
+        qw(array bool code false int jmesp path size_t url words str true void aws_arn aws_account_id aws_resource_id aws_logical_id)
     );
-    push @types, (qw(item_ref obj_ref));
+    push @types, (qw(obj hash list string scalar item item_ref obj_ref));
     my $types_re = join '|', @types;
 
     P6::Util::debug("types_re=[$types_re]\n");
@@ -264,7 +264,7 @@ sub parse {
                 push @$extra_docs, $line;
             }
 
-            if ( $line =~ /^smile|^p6_|^p6df/ ) {
+            if ( $line =~ /^smile_|^p6_|^p6df/ ) {
                 $in_func = 1;
 
                 $line =~ s/\s+.*//g;
