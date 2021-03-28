@@ -121,12 +121,12 @@ sub doc_gen_returns {
 sub doc_gen_depends {
     my $depends = shift;
 
-    my $str = "#  Depends:\n";
-
+    my $deps = "";
     foreach my $depend ( sort keys %$depends ) {
-        $str .= "#\t$depend\n";
+        $deps .= "$depend ";
     }
-    $str .= "#\n";
+    $deps =~ s/ $//;
+    my $str = "#  Depends:\t $deps\n";
 
     $str;
 }
@@ -134,11 +134,12 @@ sub doc_gen_depends {
 sub doc_gen_envs {
     my $envs = shift;
 
-    my $str = "#  Environment:\n";
-
+    my $environment = "";
     foreach my $env ( sort keys %$envs ) {
-        $str .= "#\t$env\n";
+        $environment .= "$env ";
     }
+    $environment =~ s/ $//;
+    my $str = "#  Environment:\t $environment\n";
 
     $str;
 }
@@ -162,8 +163,9 @@ sub doc_gen() {
         push @doc_lines, doc_gen_args( $func->{args} )   if $func->{args};
         push @doc_lines, doc_gen_returns( $func->{rvs} ) if $func->{rvs};
 
-    #    push @doc_lines, doc_gen_depends($func->{depends}) if $func->{depends};
-    #    push @doc_lines, doc_gen_envs($func->{envs})       if $func->{envs};
+        push @doc_lines, doc_gen_depends( $func->{depends} )
+          if $func->{depends};
+        push @doc_lines, doc_gen_envs( $func->{envs} ) if $func->{envs};
 
         push @doc_lines, "#>";
 
@@ -309,24 +311,33 @@ sub parse {
                 push @{ $funcs->{$func}->{args} }, $arg;
             }
 
-            if ( $line =~ /([A-Z_]{3,})/ ) {
+            if ( $line =~ /([A-Z_][A-Z0-9_]{2,})/ && $line !~ /^#/ ) {
                 my $global_or_env = $1;
 
                 P6::Util::debug("ge: [$global_or_env]\n");
 
-                if ( $global_or_env =~ /^P6_/ ) {
-                    $funcs->{$func}->{globals}->{$global_or_env}++;
+                if (   $global_or_env =~ /^P6_/
+                    && $global_or_env !~ /XXX/
+                    && $global_or_env !~ /OPTIONAL/
+                    && $global_or_env !~ /EOF/ )
+                {
+                    $funcs->{$func}->{envs}->{$global_or_env}++;
                 }
                 else {
                     $funcs->{$func}->{envs}->{$global_or_env}++;
                 }
             }
 
-            if ( $line =~ /\s(?:smile|p6)_([a-zA-Z0-9]+)/ ) {
+            if ( $line =~ /\s(smile|p6_[a-zA-Z0-9]+)/ ) {
                 my $depends = $1;
-
-                P6::Util::debug("depends: [$depends]\n");
-                $funcs->{$func}->{depends}->{$depends}++;
+                my $m       = $depends;
+                $m =~ s/p6_//;
+                if (   $depends !~ /return|debug/
+                    && $self->module() !~ /$m/ )
+                {
+                    P6::Util::debug("depends: [$depends]\n");
+                    $funcs->{$func}->{depends}->{$depends}++;
+                }
             }
 
             my $rv = {};
