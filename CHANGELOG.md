@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.1](https://github.com/p6m7g8/p6perl/compare/v0.1.0...v0.1.1) (2021-04-04)
+
+
+### Bug Fixes
+
+* **inline:** end files with newline, no trailing space after args doc ([#28](https://github.com/p6m7g8/p6perl/issues/28)) ([041631d](https://github.com/p6m7g8/p6perl/commit/041631dbb1386b285d349cb4488ea1fe43803307))
+* **inline:** newlines between each return ([#22](https://github.com/p6m7g8/p6perl/issues/22)) ([42c2305](https://github.com/p6m7g8/p6perl/commit/42c23051eac077b9f2a5cef310c2d8226ecc77fc))
+* **readme:** Coc -> .github, return gh stats ([#23](https://github.com/p6m7g8/p6perl/issues/23)) ([a87c25b](https://github.com/p6m7g8/p6perl/commit/a87c25bc648d0da45c40ce3c61bc4a99f68254d6))
+
+
+* smile->smile_ ([#26](https://github.com/p6m7g8/p6perl/issues/26)) ([902b12b](https://github.com/p6m7g8/p6perl/commit/902b12b657c99f8ce9b899a895c0d79fe86ae58c))
+* **doc:** updates README template ([#25](https://github.com/p6m7g8/p6perl/issues/25)) ([73ebeb5](https://github.com/p6m7g8/p6perl/commit/73ebeb58ed0e496ec584565a791bca6cd62c9150))
+* **README:** updates generator ([#24](https://github.com/p6m7g8/p6perl/issues/24)) ([e29919c](https://github.com/p6m7g8/p6perl/commit/e29919c08502b02e2155cd24b2619f73d294da33))
+
 ## [0.1.0](https://github.com/p6m7g8/p6perl/compare/v0.0.1...v0.1.0) (2020-12-06)
 
 
