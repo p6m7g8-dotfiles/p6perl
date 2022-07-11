@@ -163,8 +163,7 @@ sub doc_gen() {
         push @doc_lines, doc_gen_args( $func->{args} )   if $func->{args};
         push @doc_lines, doc_gen_returns( $func->{rvs} ) if $func->{rvs};
 
-        push @doc_lines, doc_gen_depends( $func->{depends} )
-          if $func->{depends};
+#        push @doc_lines, doc_gen_depends( $func->{depends} ) if $func->{depends};
         push @doc_lines, doc_gen_envs( $func->{envs} ) if $func->{envs};
 
         push @doc_lines, "#>";
