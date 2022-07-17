@@ -17,6 +17,7 @@ p6df::modules::p6perl::deps() {
 #
 # Function: p6df::modules::p6perl::init()
 #
+#  Environment:	 P6_DFZ_SRC_P6M7G8_DOTFILES_DIR
 #>
 ######################################################################
 p6df::modules::p6perl::init() {
@@ -32,6 +33,7 @@ p6df::modules::p6perl::init() {
 #  Args:
 #	dir -
 #
+#  Environment:	 PERL5LIB
 #>
 ######################################################################
 p6_perl_init() {
