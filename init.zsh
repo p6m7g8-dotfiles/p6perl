@@ -39,10 +39,10 @@ p6df::modules::p6perl::init() {
 #>
 ######################################################################
 p6_perl_init() {
-    local dir="$1"
+  local dir="$1"
 
-    p6_path_if "$dir/bin"
-    p6_env_export PERL5LIB "$dir/lib/perl5"
+  p6_path_if "$dir/bin"
+  p6_env_export PERL5LIB "$dir/lib/perl5"
 
-    p6_return_void
+  p6_return_void
 }
