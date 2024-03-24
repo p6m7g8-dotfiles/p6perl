@@ -15,14 +15,19 @@ p6df::modules::p6perl::deps() {
 ######################################################################
 #<
 #
-# Function: p6df::modules::p6perl::init()
+# Function: p6df::modules::p6perl::init(_module, dir)
 #
-#  Environment:	 P6_DFZ_SRC_P6M7G8_DOTFILES_DIR
+#  Args:
+#	_module -
+#	dir -
+#
 #>
 ######################################################################
 p6df::modules::p6perl::init() {
+  local _module="$1"
+  local dir="$2"
 
-  p6_perl_init $P6_DFZ_SRC_P6M7G8_DOTFILES_DIR/p6perl
+  p6_perl_init "$dir"
 
   p6_return_void
 }

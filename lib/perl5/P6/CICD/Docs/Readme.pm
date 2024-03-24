@@ -25,8 +25,9 @@ use P6::Util ();
 sub _fields {
 
     {
-        module => "",
-        funcs  => {},
+        module  => "",
+        funcs   => {},
+        aliases => {},
     }
 }
 
@@ -58,8 +59,7 @@ sub readme_gen() {
   - [Summary](#summary)
   - [Contributing](#contributing)
   - [Code of Conduct](#code-of-conduct)
-  - [Changes](#changes)
-    - [Usage](#usage)
+  - [Usage](#usage)
   - [Author](#author)
 
 ### Badges
@@ -82,11 +82,23 @@ sub readme_gen() {
 
 - [Code of Conduct](https://github.com/p6m7g8/.github/blob/master/CODE_OF_CONDUCT.md)
 
-## Changes
-
-- [Change Log](CHANGELOG.md)
-
 ## Usage
+
+";
+
+    print "
+### Aliases
+
+";
+
+    my $aliases = $self->aliases();
+    foreach my $from ( sort keys %$aliases ) {
+        my $to = $aliases->{$from};
+        print "- $from -> $to\n";
+    }
+
+    print "
+### Functions
 
 ";
 
@@ -168,6 +180,7 @@ sub parse {
     my $self = shift;
 
     my $funcs      = {};
+    my $aliases    = {};
     my $module_dir = $self->module();
     my $dirs       = $self->dirs();
 
@@ -179,6 +192,10 @@ sub parse {
                 push
                   @{ $funcs->{"$module_dir/lib"}->{""}->{"$module_dir/init.zsh"}
                   }, $1;
+            }
+            elsif ( $line =~ /p6_alias "([^"]+)" ["']([^"]+)["']/ ) {
+                my ( $from, $to ) = ( $1, $2 );
+                $aliases->{$from} = $to;
             }
         }
     }
@@ -203,6 +220,7 @@ sub parse {
         }
     }
 
+    $self->aliases($aliases);
     $self->funcs($funcs);
 
     return;
