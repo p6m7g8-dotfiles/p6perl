@@ -1,0 +1,56 @@
+# P6's POSIX.2: [% module %]
+
+
+## Table of Contents
+
+## Badges
+
+[![License](https://img.shields.io/badge/License-Apache%202.0-yellowgreen.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Mergify](https://img.shields.io/endpoint.svg?url=https://gh.mergify.io/badges/$org/$module$/&style=flat)](https://mergify.io)
+[![Gitpod ready-to-code](https://img.shields.io/badge/Gitpod-ready--to--code-blue?logo=gitpod)](<https://gitpod.io/#https://github.com/[% org %]/[% module %]>)
+
+## Summary
+
+## Contributing
+
+- [How to Contribute](<https://github.com/[% org %]/.github/blob/main/CONTRIBUTING.md>)
+
+## Code of Conduct
+
+- [Code of Conduct](<https://github.com/[% org %]/.github/blob/main/CODE_OF_CONDUCT.md>)
+
+## Usage
+
+[% IF aliases %]
+### Aliases
+
+[% FOREACH key IN aliases.keys.sort %]- [% key %] IS [% aliases.$key %]
+
+[% END %]
+[% END %]
+### Functions
+[% FOREACH dir IN funcs.keys.sort %]
+
+## [% dir %]
+
+[% FOREACH file IN funcs.$dir.keys.sort %]
+
+### [% file %]
+
+[% FOREACH func IN funcs.$dir.$file %]
+
+- [% func %]
+[% END %]
+
+[% END %]
+[% END %]
+
+## Hierarchy
+
+```text
+[% hier %]
+```
+
+## Author
+
+Philip M . Gollucci <pgollucci@p6m7g8.com>

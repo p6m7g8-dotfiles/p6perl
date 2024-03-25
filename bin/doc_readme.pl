@@ -48,9 +48,9 @@ MAIN: { exit P6::CLI->run() }
 # Entry Point
 sub work {
 
-    P6::CICD::Docs::Readme->new(module => $Module);
+    my $rc = P6::CICD::Docs::Readme->new( module => $Module );
 
-    return P6::Const::EXIT_SUCCESS;
+    return $rc;
 }
 
 __END__
