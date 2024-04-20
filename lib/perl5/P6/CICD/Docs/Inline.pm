@@ -200,7 +200,7 @@ sub splice_in() {
             next if $doc_in;
             next if $line =~ /^#\//;
 
-            if ( $line =~ /^smile_|^p6_|^p6df/ ) {
+            if ( $line =~ /^p6_|^p6df|^arkestro_/ ) {
                 my $fname = $line;
                 $fname =~ s/\s+.*//g;
 
@@ -229,11 +229,18 @@ sub files() {
 
     my $module_dir = $self->module();
     my $lib_dir    = "$module_dir/lib";
-    P6::Util::debug("lib_dir: $lib_dir\n");
+    my $bin_dir    = "$module_dir/bin";
 
-    my $files = P6::IO::scan( $lib_dir, qr/\.sh$|\.zsh$/, files_only => 1 );
+    P6::Util::debug("lib_dir: $lib_dir\n");
+    P6::Util::debug("bin_dir: $bin_dir\n");
+
+    my $bins = P6::IO::scan( $lib_dir, qr/[a-zA-Z0-9]/, files_only => 1 );
+    my $libs = P6::IO::scan( $bin_dir, qr/[a-zA-Z0-9]/, files_only => 1 );
+
+    my $files = [ @$libs, @$bins ];
+
     push @$files, "$module_dir/init.zsh" if -e "$module_dir/init.zsh";
-    push @$files, "$module_dir/.zsh-me" if -e "$module_dir/.zsh-me";
+    push @$files, "$module_dir/.zsh-me"  if -e "$module_dir/.zsh-me";
 
     P6::Util::debug_dumper( "FILES", $files );
 
@@ -267,7 +274,7 @@ sub parse {
                 push @$extra_docs, $line;
             }
 
-            if ( $line =~ /^smile_|^p6_|^p6df/ ) {
+            if ( $line =~ /^smile_|^p6_|^p6df|^arkestro_/ ) {
                 $in_func = 1;
 
                 $line =~ s/\s+.*//g;
@@ -328,7 +335,7 @@ sub parse {
                 }
             }
 
-            if ( $line =~ /\s(smile|p6_[a-zA-Z0-9]+)/ ) {
+            if ( $line =~ /\s(p6_[a-zA-Z0-9]+)/ ) {
                 my $depends = $1;
                 my $m       = $depends;
                 $m =~ s/p6_//;

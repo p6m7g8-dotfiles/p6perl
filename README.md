@@ -22,15 +22,16 @@
 
 ### Aliases
 
+
 ### Functions
 
 ## p6perl
 
 ### p6perl/init.zsh
 
+- p6_perl_init(dir)
 - p6df::modules::p6perl::deps()
 - p6df::modules::p6perl::init(_module, dir)
-- p6_perl_init(dir)
 
 ## Hierarchy
 
