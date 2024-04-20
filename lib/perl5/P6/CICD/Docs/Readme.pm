@@ -46,7 +46,7 @@ sub children() {
     my $self = shift;
     my $dir  = shift;
 
-    my $children = P6::IO::scan( $dir, qr/\.sh$|\.zsh$/, files_only => 1 );
+    my $children = [grep { !/test|debug-/ } @{P6::IO::scan( $dir, qr/\.sh$|\.zsh$/, files_only => 1 )}];
 
     P6::Util::debug("DIR: $dir\n");
     P6::Util::debug_dumper( "CHILDREN: ", $children );
@@ -80,6 +80,7 @@ sub parse {
         foreach my $line (@$lines) {
             if ( $line =~ /# Function: (.*)/ ) {
                 my $func   = $1;
+		next if $func =~ /__/; ## internal/debug
                 my $subdir = File::Basename::dirname $file;
 
                 $subdir =~ s!$module_dir/lib/!!;
@@ -87,6 +88,13 @@ sub parse {
 
                 push @{ $funcs->{$subdir}->{$file} }, $func;
             }
+        }
+    }
+
+    foreach my $dir (keys %{$funcs}) {
+        foreach my $file (keys %{$funcs->{$dir}}) {
+            my @sorted_funcs = sort @{$funcs->{$dir}{$file}};
+            $funcs->{$dir}{$file} = \@sorted_funcs;
         }
     }
 
