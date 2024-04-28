@@ -251,7 +251,7 @@ sub parse {
     my $self = shift;
 
     my @types = (
-        qw(array bool code false int jmesp path size_t url words str true void aws_arn aws_account_id aws_resource_id aws_logical_id)
+        qw(array bool code false filter float int ipv4 jmesp path size_t stream url words str true void aws_arn aws_account_id aws_resource_id aws_logical_id)
     );
     push @types, (qw(obj hash list string scalar item item_ref obj_ref));
     my $types_re = join '|', @types;
