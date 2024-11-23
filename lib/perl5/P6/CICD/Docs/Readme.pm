@@ -114,7 +114,7 @@ sub readme_gen() {
     my $path    = $self->tmpl();
     my $module  = File::Basename::basename($omodule);
 
-    my $hier = qx/cd $module ; tree/;
+    my $hier = qx/cd $module ; tree -I node_modules -I cdktf.out -I cdk.out -I coverage -I tsconfig.tsbuildinfo/;
 
     my $data = {
         aliases => $aliases,
