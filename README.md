@@ -22,7 +22,6 @@
 
 ### Aliases
 
-
 ### Functions
 
 ## p6perl
@@ -37,7 +36,6 @@
 
 ```text
 .
-├── README.md
 ├── bin
 │   ├── doc_inline.pl
 │   ├── doc_readme.pl
@@ -57,12 +55,12 @@
 │       │   │   │   ├── Cmd.pm
 │       │   │   │   └── Service.pm
 │       │   │   └── SGen.pm
+│       │   ├── Cache.pm
 │       │   ├── CICD
 │       │   │   └── Docs
 │       │   │       ├── Inline.pm
 │       │   │       └── Readme.pm
 │       │   ├── CLI.pm
-│       │   ├── Cache.pm
 │       │   ├── Cmd.pm
 │       │   ├── Const.pm
 │       │   ├── DB.pm
@@ -81,6 +79,7 @@
 │       │   ├── Template.pm
 │       │   └── Util.pm
 │       └── P6.pm
+├── README.md
 └── tt
     ├── aws_func.tt
     ├── aws_uw_func.tt
