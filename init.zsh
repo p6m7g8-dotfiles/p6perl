@@ -7,6 +7,7 @@
 #>
 ######################################################################
 p6df::modules::p6perl::deps() {
+  # shellcheck disable=2034
   ModuleDeps=(
     p6m7g8-dotfiles/p6common
   )
