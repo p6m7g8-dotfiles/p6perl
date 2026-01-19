@@ -93,7 +93,7 @@ sub parse {
 
                 push @{ $funcs->{$subdir}->{$file} }, $func;
 
-                if ( $func =~ /^\Q$module_prefix\E::(deps|init|home::symlinks|external::brew|langs|aliases::init|completions::init|vscodes|vscodes::config|prompt::init|prompt::mod)\(/ ) {
+                if ( $func =~ /^\Q$module_prefix\E::(deps|init|home::symlinks|external::brew|langs|aliases::init|path::init|completions::init|vscodes|vscodes::config|prompt::init|prompt::mod)\(/ ) {
                     $hooks->{$1} = $func;
                 }
             }
