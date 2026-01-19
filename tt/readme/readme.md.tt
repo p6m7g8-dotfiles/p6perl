@@ -1,13 +1,31 @@
 # P6's POSIX.2: [% module %]
 
-
 ## Table of Contents
+
+- [Badges](#badges)
+- [Summary](#summary)
+- [Contributing](#contributing)
+- [Code of Conduct](#code-of-conduct)
+- [Usage](#usage)
+[% IF aliases && aliases.keys.size %]
+  - [Aliases](#aliases)
+[% END %]
+[% IF hooks && hooks.keys.size %]
+  - [Hooks](#hooks)
+[% END %]
+[% IF funcs && funcs.keys.size %]
+  - [Functions](#functions)
+[% END %]
+- [Hierarchy](#hierarchy)
+- [Author](#author)
 
 ## Badges
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-yellowgreen.svg)](https://opensource.org/licenses/Apache-2.0)
 
 ## Summary
+
+TODO: Add a short summary of this module.
 
 ## Contributing
 
@@ -19,27 +37,36 @@
 
 ## Usage
 
-[% IF aliases %]
+[% IF aliases && aliases.keys.size %]
 ### Aliases
 
-[% FOREACH key IN aliases.keys.sort %]- [% key %] IS [% aliases.$key %]
+[% FOREACH key IN aliases.keys.sort -%]
+- `[% key %]` -> `[% aliases.$key %]`
+[% END -%]
 
 [% END %]
+[% IF hooks && hooks.keys.size %]
+### Hooks
+
+[% FOREACH key IN hooks.keys.sort -%]
+- `[% key %]` -> `[% hooks.$key %]`
+[% END -%]
+
 [% END %]
+[% IF funcs && funcs.keys.size %]
 ### Functions
-[% FOREACH dir IN funcs.keys.sort %]
 
-## [% dir %]
+[% FOREACH dir IN funcs.keys.sort %]
+#### [% dir %]
 
 [% FOREACH file IN funcs.$dir.keys.sort %]
+##### [% file %]
 
-### [% file %]
+[% FOREACH func IN funcs.$dir.$file -%]
+- `[% func %]`
+[% END -%]
 
-[% FOREACH func IN funcs.$dir.$file %]
-
-- [% func %]
 [% END %]
-
 [% END %]
 [% END %]
 
@@ -51,4 +78,4 @@
 
 ## Author
 
-Philip M . Gollucci <pgollucci@p6m7g8.com>
+Philip M. Gollucci <pgollucci@p6m7g8.com>

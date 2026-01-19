@@ -30,6 +30,66 @@ sub _fields {
     }
 }
 
+sub _func_key_from_line {
+    my $line = shift;
+
+    return "" if $line =~ /^\s*#/;
+
+    if ($line =~ /^\s*(?:function\s+)?((?:smile_|p6_|p6df|arkestro_)[A-Za-z0-9_:]*)\s*(?:\(\))?\s*\{/) {
+        my $name = $1;
+        $name .= "()" unless $name =~ /\(\)$/;
+        return $name;
+    }
+
+    return "";
+}
+
+sub _extract_envs_from_line {
+    my $line = shift;
+
+    return {} if $line =~ /^\s*#/;
+
+    my $code = $line;
+    $code =~ s/\s+#.*$//;
+
+    my %envs;
+
+    while ( $code =~ /\b(?:export|unset)\s+([A-Z_][A-Z0-9_]*)/g ) {
+        $envs{$1}++;
+    }
+
+    while ($code =~ /\bp6_env_export(?:_un)?\s+(?:--\S+\s+)?["']?([A-Z_][A-Z0-9_]*)["']?/g) {
+        $envs{$1}++;
+    }
+
+    while ( $code =~ /\$\{?([A-Z_][A-Z0-9_]*)\}?/g ) {
+        $envs{$1}++;
+    }
+
+    return \%envs;
+}
+
+sub _arg_from_local_line {
+    my $line = shift;
+
+    return unless $line =~ /^\s+local\b/;
+
+    my ( $name, $rhs ) = $line =~ /^\s+local(?:\s+-[a-zA-Z]+)*\s+([a-zA-Z_][a-zA-Z0-9_]*)=(.+)$/;
+    return unless $name;
+    return unless $rhs =~ /\$[@*]|\$\{\d+/ || $rhs =~ /\$\d/;
+
+    my $arg = { name => $name };
+
+    if ( $rhs =~ /\$\{\d+:-([^}]*)\}/ ) {
+        $arg->{default} = $1;
+    }
+
+    $arg->{comment} = $1 if $line =~ /# (.*)$/;
+    delete $arg->{comment} unless $arg->{comment} && $arg->{comment} =~ /\w/;
+
+    return $arg;
+}
+
 sub _post_init {
     my $self = shift;
     my %args = @_;
@@ -200,17 +260,19 @@ sub splice_in() {
             next if $doc_in;
             next if $line =~ /^#\//;
 
-            if ( $line =~ /^p6_|^p6df|^arkestro_/ ) {
-                my $fname = $line;
-                $fname =~ s/\s+.*//g;
+            my $fname = _func_key_from_line($line);
+            if ($fname) {
 
                 P6::Util::debug("DEF: $fname\n");
 
                 $func = $funcs->{$fname};
-                push @new_lines, $mark;
-                push @new_lines, grep { chomp; 1 } @{ $func->{doc_lines} };
-                push @new_lines, grep { chomp; 1 } @{ $func->{extra_docs} };
-                push @new_lines, $mark;
+                if ($func) {
+                    push @new_lines, $mark;
+                    push @new_lines, grep { chomp; 1 } @{ $func->{doc_lines} };
+                    push @new_lines, grep { chomp; 1 }
+                      @{ $func->{extra_docs} };
+                    push @new_lines, $mark;
+                }
             }
 
             push @new_lines, $line;
@@ -234,8 +296,14 @@ sub files() {
     P6::Util::debug("lib_dir: $lib_dir\n");
     P6::Util::debug("bin_dir: $bin_dir\n");
 
-    my $bins = P6::IO::scan( $lib_dir, qr/[a-zA-Z0-9]/, files_only => 1 );
-    my $libs = P6::IO::scan( $bin_dir, qr/[a-zA-Z0-9]/, files_only => 1 );
+    my $libs =
+      -d $lib_dir
+      ? P6::IO::scan( $lib_dir, qr/[a-zA-Z0-9]/, files_only => 1 )
+      : [];
+    my $bins =
+      -d $bin_dir
+      ? P6::IO::scan( $bin_dir, qr/[a-zA-Z0-9]/, files_only => 1 )
+      : [];
 
     my $files = [ @$libs, @$bins ];
 
@@ -250,9 +318,7 @@ sub files() {
 sub parse {
     my $self = shift;
 
-    my @types = (
-        qw(array bool code false filter float int ipv4 jmesp path size_t stream url words str true void aws_arn aws_account_id aws_resource_id aws_logical_id)
-    );
+    my @types = (qw(array bool code false filter float int ipv4 jmesp path size_t stream url words str true void aws_arn aws_account_id aws_resource_id aws_logical_id));
     push @types, (qw(obj hash list string scalar item item_ref obj_ref));
     my $types_re = join '|', @types;
 
@@ -274,14 +340,14 @@ sub parse {
                 push @$extra_docs, $line;
             }
 
-            if ( $line =~ /^smile_|^p6_|^p6df|^arkestro_/ ) {
+            my $func_key = _func_key_from_line($line);
+            if ($func_key) {
                 $in_func = 1;
 
-                $line =~ s/\s+.*//g;
-                $func = $line;
+                $func = $func_key;
 
                 my $name = $func;
-                $name =~ s/\(\)//;
+                $name =~ s/\(\)$//;
 
                 P6::Util::debug("\tFUNC: $name\n");
 
@@ -295,20 +361,15 @@ sub parse {
                 $arg_end = 1;
             }
 
-            if ( !$arg_end && $line =~ /^\s+local ([a-zA-Z_][a-zA-z0-9_]*)=/ ) {
-                my $arg = {};
-                $arg->{name} = $1;
-
-                $arg->{default} = $1 if $line =~ /:-([^}]*)\}/;
-                $arg->{comment} = $1 if $line =~ /# (.*)$/;
-                delete $arg->{comment}
-                  unless $arg->{comment} && $arg->{comment} =~ /\w/;
-
-                P6::Util::debug_dumper( "arg", $arg );
-                push @{ $funcs->{$func}->{args} }, $arg;
+            if ( !$arg_end ) {
+                my $arg = _arg_from_local_line($line);
+                if ($arg) {
+                    P6::Util::debug_dumper( "arg", $arg );
+                    push @{ $funcs->{$func}->{args} }, $arg;
+                }
             }
 
-            if ( !$arg_end && $line =~ /^\s+shift (\d+?)/ ) {
+            if ( !$arg_end && $line =~ /^\s+shift(?:\s+(\d+))?/ ) {
                 my $comment;
                 $comment = $1 if $line =~ /# (.*)$/;
                 my $arg = {
@@ -318,30 +379,17 @@ sub parse {
                 push @{ $funcs->{$func}->{args} }, $arg;
             }
 
-            if ( $line =~ /([A-Z_][A-Z0-9_]{2,})/ && $line !~ /^#/ ) {
-                my $global_or_env = $1;
-
-                P6::Util::debug("ge: [$global_or_env]\n");
-
-                if (   $global_or_env =~ /^P6_/
-                    && $global_or_env !~ /XXX/
-                    && $global_or_env !~ /OPTIONAL/
-                    && $global_or_env !~ /EOF/ )
-                {
-                    $funcs->{$func}->{envs}->{$global_or_env}++;
-                }
-                else {
-                    $funcs->{$func}->{envs}->{$global_or_env}++;
-                }
+            my $envs = _extract_envs_from_line($line);
+            foreach my $env ( sort keys %$envs ) {
+                P6::Util::debug("env: [$env]\n");
+                $funcs->{$func}->{envs}->{$env}++;
             }
 
             if ( $line =~ /\s(p6_[a-zA-Z0-9]+)/ ) {
                 my $depends = $1;
                 my $m       = $depends;
                 $m =~ s/p6_//;
-                if (   $depends !~ /return|debug/
-                    && $self->module() !~ /$m/ )
-                {
+                if ($depends !~ /return|debug/ && $self->module() !~ /$m/) {
                     P6::Util::debug("depends: [$depends]\n");
                     $funcs->{$func}->{depends}->{$depends}++;
                 }
@@ -366,7 +414,7 @@ sub parse {
                 push @{ $funcs->{$func}->{rvs} }, $rv;
             }
 
-            if ( $line =~ /^}$/ ) {
+            if ( $line =~ /^\s*}$/ ) {
                 $in_func = 0;
                 $arg_end = 0;
             }

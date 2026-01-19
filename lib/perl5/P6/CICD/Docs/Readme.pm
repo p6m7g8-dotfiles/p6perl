@@ -29,6 +29,7 @@ sub _fields {
         module  => "",
         funcs   => {},
         aliases => {},
+        hooks   => {},
     }
 }
 
@@ -59,7 +60,10 @@ sub parse {
 
     my $funcs      = {};
     my $aliases    = {};
+    my $hooks      = {};
     my $module_dir = $self->module();
+    my $module     = File::Basename::basename($module_dir);
+    my $module_prefix = "p6df::modules::$module";
 
     if ( -e "$module_dir/init.zsh" ) {
         my $lines = P6::IO::dread("$module_dir/init.zsh");
@@ -80,13 +84,18 @@ sub parse {
         foreach my $line (@$lines) {
             if ( $line =~ /# Function: (.*)/ ) {
                 my $func   = $1;
-		next if $func =~ /__/; ## internal/debug
+		        next if $func =~ /__/; ## internal/debug
+
                 my $subdir = File::Basename::dirname $file;
 
                 $subdir =~ s!$module_dir/lib/!!;
                 P6::Util::debug("SUBDIR2: $subdir\n");
 
                 push @{ $funcs->{$subdir}->{$file} }, $func;
+
+                if ( $func =~ /^\Q$module_prefix\E::(deps|init|home::symlinks|external::brew|langs|aliases::init|completions::init|vscodes|vscodes::config|prompt::init|prompt::mod)\(/ ) {
+                    $hooks->{$1} = $func;
+                }
             }
         }
     }
@@ -99,6 +108,7 @@ sub parse {
     }
 
     $self->aliases($aliases);
+    $self->hooks($hooks);
     $self->funcs($funcs);
 
     return;
@@ -111,16 +121,20 @@ sub readme_gen() {
     my $omodule = $self->module();
     my $aliases = $self->aliases();
     my $funcs   = $self->funcs();
+    my $hooks   = $self->hooks();
     my $path    = $self->tmpl();
     my $module  = File::Basename::basename($omodule);
+    my $org     = "p6m7g8-dotfiles";
 
-    my $hier = qx/cd $module ; tree -I node_modules -I cdktf.out -I cdk.out -I coverage -I tsconfig.tsbuildinfo/;
+    my $hier = qx/cd $omodule ; tree -I node_modules -I cdktf.out -I cdk.out -I coverage -I tsconfig.tsbuildinfo/;
 
     my $data = {
         aliases => $aliases,
         funcs   => $funcs,
         module  => $module,
+        org     => $org,
         hier    => $hier,
+        hooks   => $hooks,
     };
 
     my $rv = P6::Template->render(
@@ -131,10 +145,74 @@ sub readme_gen() {
         output => "$module/" . $self->output(),
     );
 
+    $self->_format_markdown("$module/" . $self->output());
+
     return $rv;
 }
 
 sub output     { "README.md" }
 sub tmpl_paths { "$ENV{PERL5LIB}/../../tt" }
 sub tmpl       { "readme/readme.md.tt" }
+
+sub _format_markdown {
+    my $self   = shift;
+    my $output = shift;
+
+    my $lines = P6::IO::dread($output);
+    my @out;
+
+    for ( my $i = 0 ; $i < @$lines ; $i++ ) {
+        my $line = $lines->[$i];
+        my $next = $lines->[$i + 1];
+        my $prev = @out ? $out[-1] : undef;
+        my $prev_in = $lines->[$i - 1];
+
+        my $is_blank   = sub { !defined $_[0] || $_[0] =~ /^\s*$/ };
+        my $is_heading = $line =~ /^#{1,6}\s/;
+        my $is_list    = $line =~ /^\s*-\s+/;
+        my $prev_is_list = defined($prev_in) && $prev_in =~ /^\s*-\s+/;
+        my $next_is_list = defined($next) && $next =~ /^\s*-\s+/;
+        my $prev_is_blank = $is_blank->($prev_in);
+        my $next_is_blank = $is_blank->($next);
+
+        if ($is_heading) {
+            push @out, "\n" if @out && !$prev_is_blank && !$is_blank->($prev);
+            push @out, $line;
+            push @out, "\n" if defined($next) && !$next_is_blank;
+            next;
+        }
+
+        if ($is_list) {
+            if ( defined($prev_in) && !$prev_is_list && !$prev_is_blank && !$is_blank->($prev) ) {
+                push @out, "\n";
+            }
+            push @out, $line;
+            if ( defined($next) && !$next_is_list && !$next_is_blank ) {
+                push @out, "\n";
+            }
+            next;
+        }
+
+        push @out, $line;
+    }
+
+    my @clean;
+    my $blank_run = 0;
+    for my $line (@out) {
+        if ( $line =~ /^\s*$/ ) {
+            $blank_run++;
+            next if $blank_run > 1;
+        }
+        else {
+            $blank_run = 0;
+        }
+        push @clean, $line;
+    }
+
+    my $content = join "", @clean;
+    P6::IO::dwrite( $output, \$content );
+
+    return;
+}
+
 1;
