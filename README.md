@@ -2,33 +2,48 @@
 
 ## Table of Contents
 
+- [Badges](#badges)
+- [Summary](#summary)
+- [Contributing](#contributing)
+- [Code of Conduct](#code-of-conduct)
+- [Usage](#usage)
+  - [Hooks](#hooks)
+  - [Functions](#functions)
+- [Hierarchy](#hierarchy)
+- [Author](#author)
+
 ## Badges
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-yellowgreen.svg)](https://opensource.org/licenses/Apache-2.0)
 
 ## Summary
 
+TODO: Add a short summary of this module.
+
 ## Contributing
 
-- [How to Contribute](<https://github.com//.github/blob/main/CONTRIBUTING.md>)
+- [How to Contribute](<https://github.com/p6m7g8-dotfiles/.github/blob/main/CONTRIBUTING.md>)
 
 ## Code of Conduct
 
-- [Code of Conduct](<https://github.com//.github/blob/main/CODE_OF_CONDUCT.md>)
+- [Code of Conduct](<https://github.com/p6m7g8-dotfiles/.github/blob/main/CODE_OF_CONDUCT.md>)
 
 ## Usage
 
-### Aliases
+### Hooks
+
+- `deps` -> `p6df::modules::p6perl::deps()`
+- `init` -> `p6df::modules::p6perl::init(_module, dir)`
 
 ### Functions
 
-## p6perl
+#### p6perl
 
-### p6perl/init.zsh
+##### p6perl/init.zsh
 
-- p6_perl_init(dir)
-- p6df::modules::p6perl::deps()
-- p6df::modules::p6perl::init(_module, dir)
+- `p6_perl_init(dir)`
+- `p6df::modules::p6perl::deps()`
+- `p6df::modules::p6perl::init(_module, dir)`
 
 ## Hierarchy
 
@@ -89,4 +104,4 @@
 
 ## Author
 
-Philip M . Gollucci <pgollucci@p6m7g8.com>
+Philip M. Gollucci <pgollucci@p6m7g8.com>
