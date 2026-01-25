@@ -62,9 +62,11 @@ TODO: Add a short summary of this module.
 [% FOREACH file IN funcs.$dir.keys.sort %]
 ##### [% file %]
 
-[% FOREACH func IN funcs.$dir.$file -%]
-- `[% func %]`
-[% END -%]
+[% FOREACH func IN funcs.$dir.$file %]
+- `[% func.name %]`[% "\n" %]
+[% IF func.synopsis %]  - Synopsis: [% func.synopsis %][% "\n" %][% END %]
+[% IF func.args && func.args.size %]  - Args:[% "\n" %][% FOREACH arg IN func.args %]    - [% arg %][% "\n" %][% END %][% END %]
+[% END %]
 
 [% END %]
 [% END %]
