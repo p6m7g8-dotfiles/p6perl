@@ -53,16 +53,20 @@ sub _extract_envs_from_line {
     $code =~ s/\s+#.*$//;
 
     my %envs;
+    my %skip_envs = map { $_ => 1 } qw(P6_TRUE P6_FALSE);
 
     while ( $code =~ /\b(?:export|unset)\s+([A-Z_][A-Z0-9_]*)/g ) {
+        next if $skip_envs{$1};
         $envs{$1}++;
     }
 
     while ($code =~ /\bp6_env_export(?:_un)?\s+(?:--\S+\s+)?["']?([A-Z_][A-Z0-9_]*)["']?/g) {
+        next if $skip_envs{$1};
         $envs{$1}++;
     }
 
     while ( $code =~ /\$\{?([A-Z_][A-Z0-9_]*)\}?/g ) {
+        next if $skip_envs{$1};
         $envs{$1}++;
     }
 
@@ -72,9 +76,31 @@ sub _extract_envs_from_line {
 sub _arg_from_local_line {
     my $line = shift;
 
-    return unless $line =~ /^\s+local\b/;
+    return unless $line =~ /^\s*local\b/;
 
-    my ( $name, $rhs ) = $line =~ /^\s+local(?:\s+-[a-zA-Z]+)*\s+([a-zA-Z_][a-zA-Z0-9_]*)=(.+)$/;
+    my ( $name, $rhs ) = $line =~ /^\s*local(?:\s+-[a-zA-Z]+)*\s+([a-zA-Z_][a-zA-Z0-9_]*)=(.+)$/;
+    return unless $name;
+    return unless $rhs =~ /\$[@*]|\$\{\d+/ || $rhs =~ /\$\d/;
+
+    my $arg = { name => $name };
+
+    if ( $rhs =~ /\$\{\d+:-([^}]*)\}/ ) {
+        $arg->{default} = $1;
+    }
+
+    $arg->{comment} = $1 if $line =~ /# (.*)$/;
+    delete $arg->{comment} unless $arg->{comment} && $arg->{comment} =~ /\w/;
+
+    return $arg;
+}
+
+sub _arg_from_assignment_line {
+    my $line = shift;
+
+    return if $line =~ /^\s*#/;
+    return if $line =~ /^\s*local\b/;
+
+    my ( $name, $rhs ) = $line =~ /^\s*([a-zA-Z_][a-zA-Z0-9_]*)=(.+)$/;
     return unless $name;
     return unless $rhs =~ /\$[@*]|\$\{\d+/ || $rhs =~ /\$\d/;
 
@@ -333,6 +359,8 @@ sub parse {
         my $func    = "";
         my $in_func = 1;
         my $arg_end = 0;
+        my $arg_started = 0;
+        my %args_seen;
 
         my $lines = P6::IO::dread($file);
         foreach my $line (@$lines) {
@@ -345,6 +373,9 @@ sub parse {
                 $in_func = 1;
 
                 $func = $func_key;
+                $arg_end = 0;
+                $arg_started = 0;
+                %args_seen = ();
 
                 my $name = $func;
                 $name =~ s/\(\)$//;
@@ -357,26 +388,33 @@ sub parse {
                 $extra_docs                   = [];
             }
 
-            if ( $in_func && $line =~ /^\s+$/ ) {
-                $arg_end = 1;
+            if ( $in_func && $line =~ /^\s*$/ ) {
+                $arg_end = 1 if $arg_started;
             }
 
             if ( !$arg_end ) {
                 my $arg = _arg_from_local_line($line);
-                if ($arg) {
+                $arg ||= _arg_from_assignment_line($line);
+                if ( $arg && !$args_seen{ $arg->{name} } ) {
                     P6::Util::debug_dumper( "arg", $arg );
                     push @{ $funcs->{$func}->{args} }, $arg;
+                    $args_seen{ $arg->{name} } = 1;
+                    $arg_started = 1;
                 }
             }
 
-            if ( !$arg_end && $line =~ /^\s+shift(?:\s+(\d+))?/ ) {
+            if ( !$arg_end && $line =~ /^\s*shift(?:\s+(\d+))?/ ) {
                 my $comment;
                 $comment = $1 if $line =~ /# (.*)$/;
                 my $arg = {
                     name    => "...",
                     comment => $comment,
                 };
-                push @{ $funcs->{$func}->{args} }, $arg;
+                if ( !$args_seen{ $arg->{name} } ) {
+                    push @{ $funcs->{$func}->{args} }, $arg;
+                    $args_seen{ $arg->{name} } = 1;
+                    $arg_started = 1;
+                }
             }
 
             my $envs = _extract_envs_from_line($line);
@@ -396,12 +434,20 @@ sub parse {
             }
 
             my $rv = {};
-            if ( $line =~ /^\s+p6_return_($types_re)/ ) {
+            if ( $line !~ /^\s*#/ && $line =~ /\bp6_return_($types_re)\b/ ) {
                 $rv->{type} = $1;
 
                 P6::Util::debug("\treturn: $line");
 
-                $rv->{name} = $1 if $line =~ /\"([^\"]+)\"/;
+                if ( $line =~ /\"([^\"]+)\"/ ) {
+                    $rv->{name} = $1;
+                }
+                elsif ( $line =~ /'([^']+)'/ ) {
+                    $rv->{name} = $1;
+                }
+                elsif ( $line =~ /\bp6_return_(?:$types_re)\s+\$?([A-Za-z_][A-Za-z0-9_]*)/ ) {
+                    $rv->{name} = $1;
+                }
             }
 
             if ( $rv->{type} ) {

@@ -80,29 +80,102 @@ sub parse {
 
     foreach my $file ( sort @$children ) {
         my $lines = P6::IO::dread($file);
+        my @file_funcs;
+        my $current_func;
+        my $current_args     = [];
+        my $current_synopsis = [];
+        my $in_args          = 0;
+        my $in_synopsis      = 0;
+
+        my $flush_func = sub {
+            return unless $current_func;
+            my $synopsis = join " ", grep { defined && length } @$current_synopsis;
+            push @file_funcs,
+              {
+                name     => $current_func,
+                args     => $current_args,
+                synopsis => $synopsis,
+              };
+        };
 
         foreach my $line (@$lines) {
             if ( $line =~ /# Function: (.*)/ ) {
+                $flush_func->();
+
                 my $func   = $1;
-		        next if $func =~ /__/; ## internal/debug
+                $in_args          = 0;
+                $in_synopsis      = 0;
+                $current_func     = undef;
+                $current_args     = [];
+                $current_synopsis = [];
+
+                next if $func =~ /__/; ## internal/debug
+                $current_func = $func;
 
                 my $subdir = File::Basename::dirname $file;
 
                 $subdir =~ s!$module_dir/lib/!!;
                 P6::Util::debug("SUBDIR2: $subdir\n");
 
-                push @{ $funcs->{$subdir}->{$file} }, $func;
-
                 if ( $func =~ /^\Q$module_prefix\E::(deps|init|home::symlinks|external::brew|langs|aliases::init|path::init|completions::init|vscodes|vscodes::config|prompt::init|prompt::mod)\(/ ) {
                     $hooks->{$1} = $func;
                 }
+
+                next;
             }
+
+            next unless $current_func;
+
+            if ( $line =~ /^\s*#\s*Args:\s*$/ ) {
+                $in_args     = 1;
+                $in_synopsis = 0;
+                next;
+            }
+
+            if ($in_args) {
+                if ( $line =~ /^\s*#\s*([^\s].*?)\s*-\s*(.*)$/ ) {
+                    push @$current_args, "$1 - $2";
+                    next;
+                }
+
+                if ( $line =~ /^\s*#\s*$/ ) {
+                    next;
+                }
+
+                $in_args = 0;
+            }
+
+            if ( $line =~ /^\s*#\/\s*Synopsis\b/ ) {
+                $in_synopsis = 1;
+                $in_args     = 0;
+                next;
+            }
+
+            if ($in_synopsis) {
+                if ( $line =~ /^\s*#\/\s*(.*)$/ ) {
+                    my $text = $1;
+                    $text =~ s/^\s+//;
+                    $text =~ s/\s+$//;
+                    push @$current_synopsis, $text if length $text;
+                    next;
+                }
+
+                $in_synopsis = 0;
+            }
+        }
+
+        $flush_func->();
+
+        if (@file_funcs) {
+            my $subdir = File::Basename::dirname $file;
+            $subdir =~ s!$module_dir/lib/!!;
+            $funcs->{$subdir}->{$file} = \@file_funcs;
         }
     }
 
     foreach my $dir (keys %{$funcs}) {
         foreach my $file (keys %{$funcs->{$dir}}) {
-            my @sorted_funcs = sort @{$funcs->{$dir}{$file}};
+            my @sorted_funcs = sort { $a->{name} cmp $b->{name} } @{$funcs->{$dir}{$file}};
             $funcs->{$dir}{$file} = \@sorted_funcs;
         }
     }
