@@ -134,7 +134,9 @@ sub parse {
 
             if ($in_args) {
                 if ( $line =~ /^\s*#\s*([^\s].*?)\s*-\s*(.*)$/ ) {
-                    push @$current_args, "$1 - $2";
+                    my ( $arg, $desc ) = ( $1, $2 );
+                    $desc =~ s/\s+$//;
+                    push @$current_args, length $desc ? "$arg - $desc" : $arg;
                     next;
                 }
 

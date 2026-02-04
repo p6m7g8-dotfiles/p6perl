@@ -42,8 +42,13 @@ TODO: Add a short summary of this module.
 ##### p6perl/init.zsh
 
 - `p6_perl_init(dir)`
+  - Args:
+    - dir
 - `p6df::modules::p6perl::deps()`
 - `p6df::modules::p6perl::init(_module, dir)`
+  - Args:
+    - _module
+    - dir
 
 ## Hierarchy
 
