@@ -43,12 +43,12 @@ TODO: Add a short summary of this module.
 
 - `p6_perl_init(dir)`
   - Args:
-    - dir
+    - dir - 
 - `p6df::modules::p6perl::deps()`
 - `p6df::modules::p6perl::init(_module, dir)`
   - Args:
-    - _module
-    - dir
+    - _module - 
+    - dir - 
 
 ## Hierarchy
 
