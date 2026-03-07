@@ -121,7 +121,7 @@ sub parse {
                 $subdir =~ s!$module_dir/lib/!!;
                 P6::Util::debug("SUBDIR2: $subdir\n");
 
-                if ( $func =~ /^\Q$module_prefix\E::(deps|init|home::symlinks|external::brew|langs|aliases::init|path::init|completions::init|vscodes|vscodes::config|prompt::init|prompt::mod)\(/ ) {
+                if ( $func =~ /^\Q$module_prefix\E::(deps|init|home::symlinks|external::brew|langs|mcp|mcp::env|aliases::init|path::init|completions::init|vscodes|vscodes::config|prompt::init|prompt::mod)\(/ ) {
                     $hooks->{$1} = $func;
                 }
 
