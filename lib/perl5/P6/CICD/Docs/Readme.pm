@@ -90,7 +90,10 @@ sub parse {
         my $flush_func = sub {
             return unless $current_func;
             my $synopsis = join " ", grep { defined && length } @$current_synopsis;
-            $synopsis = substr( $synopsis, 0, 106 ) if length($synopsis) > 106;
+            if ( length($synopsis) > 106 ) {
+                $synopsis = substr( $synopsis, 0, 106 );
+            }
+            $synopsis =~ s/\s+$// if defined $synopsis && length $synopsis;
             push @file_funcs,
               {
                 name     => $current_func,
