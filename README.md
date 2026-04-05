@@ -18,9 +18,7 @@
 
 ## Summary
 
-Perl tooling for the `p6df` framework: doc generation (`doc_inline.pl`, `doc_readme.pl`),
-CI/CD helpers, and the `P6::CICD::Docs` library that produces per-module README files
-from inline zsh source comments.
+TODO: Add a short summary of this module.
 
 ## Contributing
 
